@@ -1,0 +1,14 @@
+credentials:
+  usernames:
+    felipert:
+      email: usuario1@example.com
+      name: Usuario Uno
+      password: "$2b$12$I8Id72WiQ98IgYlwfTcJsujF4qJAHvz1gY36tSl.GtezCcqFQEQ7S"  # Usar la función hashear_contraseña para generar el hash
+    usuario2:
+      email: usuario2@example.com
+      name: Usuario Dos
+      password: "$2b$12$bsgdS0wMOityDqbNEFSAauvLWv63XgLAncXfglvsuPcr8uWg.UD4e"
+cookie:
+  expiry_days: 30
+  key: clave_secreta_cookie
+  name: nombre_cookie
