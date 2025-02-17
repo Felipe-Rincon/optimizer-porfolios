@@ -1,6 +1,6 @@
 streamlit 
 streamlit-authenticator
-yaml
+PyYAML
 pandas
 numpy
 yfinance
