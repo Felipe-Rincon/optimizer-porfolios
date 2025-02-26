@@ -7,3 +7,5 @@ yfinance
 bcrypt
 plotly
 openpyxl
+pyotp
+qrcode

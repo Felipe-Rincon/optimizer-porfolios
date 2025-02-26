@@ -1,7 +1,7 @@
 from streamlit_authenticator import Hasher
 
 # Lista de contraseñas que deseas hashear
-passwords = ["contraseña1", "contraseña2"]
+passwords = ["feliperincon", "nicolasrodriguez", "guillermootero"]
 
 # Generar los hashes usando el método hash() de la clase Hasher
 hashed_passwords = [Hasher.hash(password) for password in passwords]

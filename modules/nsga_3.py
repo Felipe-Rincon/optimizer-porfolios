@@ -149,11 +149,10 @@ def nonDominatedSort(population, performances):
     dominatedCount = [0] * len(population)
     dominates = [[] for _ in range(len(population))]
     
-    # Identificar soluciones no dominadas (frente 0)
     for i in range(len(population)):
         for j in range(len(population)):
             if i == j:
-                continue  # No comparar una solución consigo misma
+                continue
             if dominate(performances[i], performances[j]):
                 dominates[i].append(j)
             elif dominate(performances[j], performances[i]):
@@ -163,11 +162,9 @@ def nonDominatedSort(population, performances):
                 fronts.append([])
             fronts[0].append(i)
     
-    # Si no hay soluciones no dominadas, todas las soluciones están en el frente 0
     if len(fronts) == 0:
         fronts.append(list(range(len(population))))
     
-    # Construir los siguientes frentes
     i = 0
     while i < len(fronts) and len(fronts[i]) > 0:
         nextFront = []
