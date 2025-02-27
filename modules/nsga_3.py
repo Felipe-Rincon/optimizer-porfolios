@@ -268,4 +268,5 @@ def main(assetValues, constraints, popsize, iters):
                 piv = math.floor(rand() * len(next_population))
                 offspring.extend(arithmeticCrossover(individual, next_population[piv], constraints))
         population = next_population + offspring
+        print(len(population))
     return population

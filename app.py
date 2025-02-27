@@ -6,6 +6,8 @@ import plotly.express as px
 import bcrypt
 import pyotp
 import qrcode
+import plotly.graph_objects as go
+import numpy as np
 
 from modules.variables import Variables_user, Variables_user_management, Variables_front, Variables_data_up
 from modules.up_data_convert import *
@@ -90,6 +92,11 @@ if st.session_state[Variables_user_management.authentication_status] and not st.
             st.error(Variables_front.invalid_totp)
             st.session_state[Variables_user_management.totp_verified] = False 
 
+# Formatear solo las columnas numéricas como porcentajes
+def format_percentage(df):
+    numeric_columns = df.select_dtypes(include=[float, int]).columns
+    return df.style.format({col: "{:.2%}" for col in numeric_columns})
+
 if st.session_state[Variables_user_management.authentication_status] and st.session_state[Variables_user_management.totp_verified]:
     st.title(Variables_front.name_app)
     st.write(f"{Variables_front.welcome_to}, {config[Variables_user.credentials][Variables_user.usernames][st.session_state[Variables_user_management.username]][Variables_user.name]}!")
@@ -107,14 +114,20 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
             st.subheader(Variables_front.values_title)
             st.write(df_values)
 
-            st.subheader(Variables_front.singular_constrains_title)
-            st.write(df_singular_contrains)
+            # Crear tres columnas para las tablas
+            col1, col2, col3 = st.columns(3)
 
-            st.subheader(Variables_front.grouped_constrains_title)
-            st.write(df_grouped_constrains)
+            with col1:
+                st.subheader(Variables_front.singular_constrains_title)
+                st.write(df_singular_contrains)
 
-            st.subheader(Variables_front.values_constrains_title)
-            st.write(df_values_constrains)
+            with col2:
+                st.subheader(Variables_front.grouped_constrains_title)
+                st.write(df_grouped_constrains)
+
+            with col3:
+                st.subheader(Variables_front.values_constrains_title)
+                st.write(format_percentage(df_values_constrains))
 
             if st.button(Variables_front.optimize):
                 with st.spinner(Variables_front.optimizing):  
@@ -132,51 +145,63 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                     df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
 
                     st.subheader(Variables_front.optimization_results_title)
-
+                    
+                    # Gráficas optimizadas con go.Scatter y go.Scatter3d
                     df_metrics_plot = df_metrics.copy()
-                    df_metrics_plot["size"] = 1  
 
+                    # Gráfica 2D optimizada
                     st.subheader(Variables_front.two_dimensions_graphics_title)
-                    fig_2d = px.scatter(
-                        df_metrics_plot,
-                        x=Variables_asset_values.volatility,
-                        y=Variables_asset_values.performance,
-                        color=Variables_asset_values.portfolios,
+                    fig_2d = go.Figure()
+                    fig_2d.add_trace(go.Scatter(
+                        x=df_metrics_plot[Variables_asset_values.volatility],
+                        y=df_metrics_plot[Variables_asset_values.performance],
+                        mode='markers',
+                        marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                        text=df_metrics_plot[Variables_asset_values.portfolios],
+                        hoverinfo='text+x+y'
+                    ))
+                    fig_2d.update_layout(
                         title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility}',
-                        labels={
-                            Variables_asset_values.volatility: Variables_asset_values.volatility,
-                            Variables_asset_values.performance: Variables_asset_values.performance
-                        },
-                        height=700,
-                        size="size", 
-                        size_max=4
+                        xaxis_title=Variables_asset_values.volatility,
+                        yaxis_title=Variables_asset_values.performance,
+                        xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
+                        yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
+                        height=700
                     )
-                    #fig_2d.update_traces(marker=dict(size=1)) # Tamaño fijo para todos los puntos
-
                     st.plotly_chart(fig_2d, use_container_width=True)
 
+                    # Gráfica 3D optimizada
                     st.subheader(Variables_front.three_dimensions_graphics_title)
-                    fig_3d = px.scatter_3d(
-                        df_metrics_plot,
-                        x=Variables_asset_values.volatility,
-                        y=Variables_asset_values.downside_risk,
-                        z=Variables_asset_values.performance,
-                        color=Variables_asset_values.portfolios,
+                    fig_3d = go.Figure()
+                    fig_3d.add_trace(go.Scatter3d(
+                        x=df_metrics_plot[Variables_asset_values.volatility],
+                        y=df_metrics_plot[Variables_asset_values.downside_risk],
+                        z=df_metrics_plot[Variables_asset_values.performance],
+                        mode='markers',
+                        marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                        text=df_metrics_plot[Variables_asset_values.portfolios],
+                        hoverinfo='text+x+y+z'
+                    ))
+                    fig_3d.update_layout(
                         title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility} vs {Variables_asset_values.downside_risk}',
-                        height=700,
-                        size="size", 
-                        size_max=4
+                        scene=dict(
+                            xaxis_title=Variables_asset_values.volatility,
+                            yaxis_title=Variables_asset_values.downside_risk,
+                            zaxis_title=Variables_asset_values.performance,
+                            xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
+                            yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
+                            zaxis_tickformat='.2%'   # Formatear eje Z como porcentaje
+                        ),
+                        height=700
                     )
-
-                    #fig_3d.update_traces(marker=dict(size=1))
-
                     st.plotly_chart(fig_3d, use_container_width=True)
 
+                    # Mostrar df_pesos y df_metrics con columnas numéricas formateadas como porcentajes
                     st.write(Variables_front.portfolio_weights_title)
-                    st.write(df_pesos)
+                    st.write(format_percentage(df_pesos))  # Formatear solo columnas numéricas
 
                     st.write(Variables_front.portfolio_metrics_title)
-                    st.write(df_metrics)
+                    st.write(format_percentage(df_metrics))  # Formatear solo columnas numéricas
 
         except Exception as e:
             st.error(f"Error al leer el archivo Excel: {e}")
