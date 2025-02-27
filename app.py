@@ -11,6 +11,11 @@ from modules.variables import Variables_user, Variables_user_management, Variabl
 from modules.up_data_convert import *
 from modules import nsga_3
 
+st.set_page_config(layout="wide")
+
+logo_path = 'Data/logos/logo.jpg'
+
+st.image(logo_path, width=150)
 
 with open(Variables_user.route_yaml) as file:
     config = yaml.load(file, Loader=SafeLoader)
@@ -86,7 +91,6 @@ if st.session_state[Variables_user_management.authentication_status] and not st.
             st.session_state[Variables_user_management.totp_verified] = False 
 
 if st.session_state[Variables_user_management.authentication_status] and st.session_state[Variables_user_management.totp_verified]:
-
     st.title(Variables_front.name_app)
     st.write(f"{Variables_front.welcome_to}, {config[Variables_user.credentials][Variables_user.usernames][st.session_state[Variables_user_management.username]][Variables_user.name]}!")
     
@@ -95,10 +99,10 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
 
     if uploaded_file is not None:
         try:
-            df_values = pd.read_excel(uploaded_file, sheet_name = Variables_data_up.values_name_sheet) 
-            df_singular_contrains = pd.read_excel(uploaded_file, sheet_name = Variables_data_up.singular_constrains_name_sheet)
-            df_grouped_constrains = pd.read_excel(uploaded_file, sheet_name = Variables_data_up.grouped_constrains_name_sheet)
-            df_values_constrains = pd.read_excel(uploaded_file, sheet_name = Variables_data_up.values_constrains_name_sheet)
+            df_values = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_name_sheet) 
+            df_singular_contrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.singular_constrains_name_sheet)
+            df_grouped_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.grouped_constrains_name_sheet)
+            df_values_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_constrains_name_sheet)
 
             st.subheader(Variables_front.values_title)
             st.write(df_values)
@@ -129,16 +133,44 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
 
                     st.subheader(Variables_front.optimization_results_title)
 
+                    df_metrics_plot = df_metrics.copy()
+                    df_metrics_plot["size"] = 1  
+
                     st.subheader(Variables_front.two_dimensions_graphics_title)
-                    fig_2d = px.scatter(df_metrics, x = Variables_asset_values.volatility, y = Variables_asset_values.performance, 
-                                        color = Variables_asset_values.portfolios, title = f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility}',
-                                        labels = {Variables_asset_values.volatility: Variables_asset_values.volatility, Variables_asset_values.performance: Variables_asset_values.performance})
-                    st.plotly_chart(fig_2d)
+                    fig_2d = px.scatter(
+                        df_metrics_plot,
+                        x=Variables_asset_values.volatility,
+                        y=Variables_asset_values.performance,
+                        color=Variables_asset_values.portfolios,
+                        title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility}',
+                        labels={
+                            Variables_asset_values.volatility: Variables_asset_values.volatility,
+                            Variables_asset_values.performance: Variables_asset_values.performance
+                        },
+                        height=700,
+                        size="size", 
+                        size_max=4
+                    )
+                    #fig_2d.update_traces(marker=dict(size=1)) # Tamaño fijo para todos los puntos
+
+                    st.plotly_chart(fig_2d, use_container_width=True)
 
                     st.subheader(Variables_front.three_dimensions_graphics_title)
-                    fig_3d = px.scatter_3d(df_metrics, x = Variables_asset_values.volatility, y = Variables_asset_values.downside_risk, z = Variables_asset_values.performance, 
-                                          color = Variables_asset_values.portfolios, title = f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility} vs { Variables_asset_values.downside_risk}')
-                    st.plotly_chart(fig_3d)
+                    fig_3d = px.scatter_3d(
+                        df_metrics_plot,
+                        x=Variables_asset_values.volatility,
+                        y=Variables_asset_values.downside_risk,
+                        z=Variables_asset_values.performance,
+                        color=Variables_asset_values.portfolios,
+                        title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility} vs {Variables_asset_values.downside_risk}',
+                        height=700,
+                        size="size", 
+                        size_max=4
+                    )
+
+                    #fig_3d.update_traces(marker=dict(size=1))
+
+                    st.plotly_chart(fig_3d, use_container_width=True)
 
                     st.write(Variables_front.portfolio_weights_title)
                     st.write(df_pesos)

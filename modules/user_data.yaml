@@ -8,15 +8,14 @@ credentials:
       email: usuario1@example.com
       name: Felipe Rincon
       password: $2b$12$E5.g1jFAAjr99aY/ru3x7uIFYt0Y4Z.To/4PCmtP.V6uhvzFNfhuS
+      totp_secret: QFNLFIL7WSZY7PZD5MYUCEWCLRTWKFRY
+    guillermoo:
+      email: usuario2@example.com
+      name: Guillermo Otero
+      password: $2b$12$aecBSAwVkyuCcxA9EdHn4e/DSDSgqXs1NSm1f2olsT6Z.mGNwrSti
       totp_secret: null
     nicolasr:
       email: usuario2@example.com
       name: Nicolas Rodriguez
       password: $2b$12$0N5t4avqc07k4G9jrTRH2.DmmLVvX437eKoYG8fK5.2E3tMDyaFvK
       totp_secret: null
-    guillermoo:
-      email: usuario2@example.com
-      name: Guillermo Otero
-      password: $2b$12$aecBSAwVkyuCcxA9EdHn4e/DSDSgqXs1NSm1f2olsT6Z.mGNwrSti
-      totp_secret: null
-
