@@ -2,9 +2,11 @@ import numpy as np
 import math
 from numpy.random import seed, rand
 
+import time
+
 from itertools import combinations
 
-seed(821651386)
+seed(int(time.time())) 
 
 ROOT365 = math.sqrt(365)
 print("ROOT365:", ROOT365)
@@ -129,9 +131,47 @@ class DownsideRiskFunction:
             return 0
         return 1 if value1 < value2 else -1
 
-functions = [ExpectedReturnFunction(), VolatilityFunction(), DownsideRiskFunction()]
 
-def dominate(performance1, performance2):
+class MaxDrawdownFunction:
+    def __init__(self):
+        self.name = 'Maximum Drawdown'
+    
+    def generateUnitValues(self, solution, values):
+        units = [100]
+        for i in range(len(values[0]['historical_returns'])):
+            sum_val = sum(values[j]['historical_returns'][i] * solution[j] for j in range(len(solution)))
+            units.append(units[i] * (1 + sum_val))
+        return units
+    
+    def calculateDrawdown(self, prices):
+        peak = prices[0]
+        max_drawdown = 0
+        for price in prices:
+            if price > peak:
+                peak = price
+            drawdown = (peak - price) / peak
+            if drawdown > max_drawdown:
+                max_drawdown = drawdown
+        return max_drawdown
+    
+    def apply(self, solution, values):
+        unit_values = self.generateUnitValues(solution, values)
+        return self.calculateDrawdown(unit_values)
+    
+    def compare(self, value1, value2):
+        if abs(value1 - value2) < 1e-9:
+            return 0
+        return 1 if value1 < value2 else -1
+    
+def functions_generator(functions_entry):
+
+    functions = [eval(functions) for functions in functions_entry]
+
+    return functions
+
+#functions = [ExpectedReturnFunction(), VolatilityFunction(), MaxDrawdownFunction()]
+
+def dominate(performance1, performance2, functions):
     dominance = False
     for i in range(len(functions)):
         cmp = functions[i].compare(performance1[i], performance2[i])
@@ -141,10 +181,14 @@ def dominate(performance1, performance2):
             dominance = True
     return dominance
 
-def evaluate(assetValues, population):
+def evaluate(assetValues, population, functions):
     return [[func.apply(individual, assetValues) for func in functions] for individual in population]
 
-def nonDominatedSort(population, performances):
+def evaluate_portfolios(assetValues, population, functions_entry):
+    functions = functions_generator(functions_entry)
+    return [[func.apply(individual, assetValues) for func in functions] for individual in population]
+
+def nonDominatedSort(population, performances, functions):
     fronts = []
     dominatedCount = [0] * len(population)
     dominates = [[] for _ in range(len(population))]
@@ -153,9 +197,9 @@ def nonDominatedSort(population, performances):
         for j in range(len(population)):
             if i == j:
                 continue
-            if dominate(performances[i], performances[j]):
+            if dominate(performances[i], performances[j], functions):
                 dominates[i].append(j)
-            elif dominate(performances[j], performances[i]):
+            elif dominate(performances[j], performances[i], functions):
                 dominatedCount[i] += 1
         if dominatedCount[i] == 0:
             if len(fronts) == 0:
@@ -193,7 +237,7 @@ def generateReferencePoints(num_objs, num_divisions):
         ref_points.append(ref_point)
     return ref_points
 
-def associateToReferencePoints(population, performances, ref_points):
+def associateToReferencePoints(population, performances, ref_points, functions):
     num_objs = len(functions)
     niche_counts = [0] * len(ref_points)
     distances = [[] for _ in range(len(ref_points))]
@@ -244,20 +288,22 @@ def arithmeticCrossover(parent1, parent2, constraints):
     child2 = [((1 - alpha) * parent1[i]) + (alpha * parent2[i]) for i in range(len(parent1))]
     return [repair(child1, constraints), repair(child2, constraints)]
 
-def main(assetValues, constraints, popsize, iters):
+def main(assetValues, constraints, popsize, iters, functions_entry):
+    functions = functions_generator(functions_entry)
     num_objs = len(functions)
     ref_points = generateReferencePoints(num_objs, 4)
     population = generatePopulation(constraints, popsize)
     for i in range(iters):
         print(f"Iteration {i}: Population size = {len(population)}")
-        performances = evaluate(assetValues, population)
-        fronts = nonDominatedSort(population, performances)
+        print('f', functions)
+        performances = evaluate(assetValues, population, functions)
+        fronts = nonDominatedSort(population, performances, functions)
         next_population = []
         for front in fronts:
             if len(next_population) + len(front) <= popsize:
                 next_population.extend([population[idx] for idx in front])
             else:
-                distances, niche_counts = associateToReferencePoints(population, performances, ref_points)
+                distances, niche_counts = associateToReferencePoints(population, performances, ref_points, functions)
                 next_population.extend(nichingSelection(population, performances, ref_points, niche_counts, distances, popsize - len(next_population)))
                 break
         offspring = []

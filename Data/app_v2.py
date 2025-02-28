@@ -114,14 +114,20 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
             st.subheader(Variables_front.values_title)
             st.write(df_values)
 
-            st.subheader(Variables_front.singular_constrains_title)
-            st.write(df_singular_contrains)
+            # Crear tres columnas para las tablas
+            col1, col2, col3 = st.columns(3)
 
-            st.subheader(Variables_front.grouped_constrains_title)
-            st.write(df_grouped_constrains)
+            with col1:
+                st.subheader(Variables_front.singular_constrains_title)
+                st.write(df_singular_contrains)
 
-            st.subheader(Variables_front.values_constrains_title)
-            st.write(format_percentage(df_values_constrains))
+            with col2:
+                st.subheader(Variables_front.grouped_constrains_title)
+                st.write(df_grouped_constrains)
+
+            with col3:
+                st.subheader(Variables_front.values_constrains_title)
+                st.write(format_percentage(df_values_constrains))
 
             if st.button(Variables_front.optimize):
                 with st.spinner(Variables_front.optimizing):  
@@ -196,7 +202,6 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
 
                     st.write(Variables_front.portfolio_metrics_title)
                     st.write(format_percentage(df_metrics))  # Formatear solo columnas numéricas
-
 
         except Exception as e:
             st.error(f"Error al leer el archivo Excel: {e}")

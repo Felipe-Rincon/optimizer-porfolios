@@ -60,11 +60,36 @@ class Variables_front:
     incorrect_credentials = 'Incorrect username or password'
     try_again = 'Try again.' 
     welcome_to = 'Welcome to'
+    variable_x ='Variable X'
+    variable_y ='Variable Y'
+    variable_z ='Variable Z'
+    metric_variable_x = 'Metric for Variable X'
+    metric_variable_y = 'Metric for Variable Y'
+    metric_variable_z = 'Metric for Variable Z'
+    select_metrics ='Select the metrics for each variable'
 
+
+    
+    names_to_front = {
+        "Expected Return": "Expected Return",
+        "Volatility": "Volatility",
+        "Downside Risk": "Downside Risk",
+        "Maximum Drawdown": "Maximum Drawdown"
+    }
 
 class Variables_data_up:
     values_name_sheet = 'values'
     singular_constrains_name_sheet = 'singular_constrains'
     grouped_constrains_name_sheet = 'grouped_constrains'
     values_constrains_name_sheet = 'values_constrains'
+
+class Variables_mapping_optimization:
+
+    names_to_mapping = {
+        "Expected Return": "ExpectedReturnFunction()",
+        "Volatility": "VolatilityFunction()",
+        "Downside Risk": "DownsideRiskFunction()",
+        "Maximum Drawdown": "MaxDrawdownFunction()"
+    }
+
 
