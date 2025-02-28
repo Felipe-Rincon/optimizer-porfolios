@@ -9,7 +9,7 @@ import qrcode
 import plotly.graph_objects as go
 import numpy as np
 
-from modules.variables import Variables_user, Variables_user_management, Variables_front, Variables_data_up, Variables_mapping_optimization
+from modules.variables import *
 from modules.up_data_convert import *
 from modules import nsga_3
 
