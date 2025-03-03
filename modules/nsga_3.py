@@ -76,6 +76,18 @@ class ExpectedReturnFunction:
             return 0
         return 1 if value1 > value2 else -1
     
+class ExpectedReturnForecastFunction:
+    def  __init__(self):
+        self.name = 'Expected Return Forecast'
+    
+    def apply(self, solution, values):
+        return sum(solution[i] * values[i]['expected_return_forecast'] for i in range(len(solution)))
+    
+    def compare(self, value1, value2):
+        if abs(value1 - value2) < 1e-9:
+            return 0
+        return 1 if value1 > value2 else -1
+        
 class VolatilityFunction:
     def __init__(self):
         self.name = 'Volatility'
@@ -162,7 +174,15 @@ class MaxDrawdownFunction:
         if abs(value1 - value2) < 1e-9:
             return 0
         return 1 if value1 < value2 else -1
+
+class DurationFunction:
+    def __init__(self):
+        self.name = 'Duration'
     
+    def apply(self, solution, values):
+        return sum(solution[i] * values[i]['duration'] for i in range(len(solution)))
+    
+
 def functions_generator(functions_entry):
 
     functions = [eval(functions) for functions in functions_entry]
@@ -185,7 +205,7 @@ def evaluate(assetValues, population, functions):
     return [[func.apply(individual, assetValues) for func in functions] for individual in population]
 
 def evaluate_portfolios(assetValues, population, functions_entry):
-    functions = functions_generator(functions_entry)
+    functions = functions_generator(functions_entry) + [DurationFunction()]
     return [[func.apply(individual, assetValues) for func in functions] for individual in population]
 
 def nonDominatedSort(population, performances, functions):

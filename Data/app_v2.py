@@ -9,7 +9,7 @@ import qrcode
 import plotly.graph_objects as go
 import numpy as np
 
-from modules.variables import Variables_user, Variables_user_management, Variables_front, Variables_data_up
+from modules.variables import *
 from modules.up_data_convert import *
 from modules import nsga_3
 
@@ -28,6 +28,8 @@ if Variables_user_management.username not in st.session_state:
     st.session_state[Variables_user_management.username] = None
 if Variables_user_management.totp_verified not in st.session_state:
     st.session_state[Variables_user_management.totp_verified] = False
+
+
 
 def generar_qr(usuario, secret_key):
     uri = pyotp.totp.TOTP(secret_key).provisioning_uri(name = usuario, issuer_name = Variables_front.name_app)
@@ -129,18 +131,41 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                 st.subheader(Variables_front.values_constrains_title)
                 st.write(format_percentage(df_values_constrains))
 
+            # Selección de métricas para cada variable
+            st.subheader(Variables_front.select_metrics)
+
+            # Variable 1
+            st.write(Variables_front.variable_x)
+            var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+
+            # Variable 2
+            st.write(Variables_front.variable_y)
+            var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+
+            # Variable 3
+            st.write(Variables_front.variable_z)
+            var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+
+            # Crear la variable functions basada en las selecciones
+            functions_entry = [
+                Variables_mapping_optimization.names_to_mapping[var_x_name],
+                Variables_mapping_optimization.names_to_mapping[var_y_name],
+                Variables_mapping_optimization.names_to_mapping[var_z_name]
+            ]
+
             if st.button(Variables_front.optimize):
                 with st.spinner(Variables_front.optimizing):  
+                    print(functions_entry)
                     asset_values = asset_values_generator(df_values)
                     portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
-                    optimum = nsga_3.main(asset_values, portfolio_constraints, 1000, 1)
+                    optimum = nsga_3.main(asset_values, portfolio_constraints, 1000, 1 , functions_entry)
 
                     column_names = df_values.columns.tolist()  
                     df_pesos = pd.DataFrame(optimum, columns=column_names)
                     df_pesos.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_pesos))])
-
-                    frontier = nsga_3.evaluate(asset_values, optimum)
-                    column_names_metrics = [Variables_asset_values.performance, Variables_asset_values.volatility, Variables_asset_values.downside_risk]
+                    
+                    frontier = nsga_3.evaluate_portfolios(asset_values, optimum,functions_entry)
+                    column_names_metrics = [Variables_front.names_to_front[var_x_name], Variables_front.names_to_front[var_y_name],Variables_front.names_to_front[var_z_name]]
                     df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
                     df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
 
@@ -153,17 +178,17 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                     st.subheader(Variables_front.two_dimensions_graphics_title)
                     fig_2d = go.Figure()
                     fig_2d.add_trace(go.Scatter(
-                        x=df_metrics_plot[Variables_asset_values.volatility],
-                        y=df_metrics_plot[Variables_asset_values.performance],
+                        x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                        y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
                         mode='markers',
                         marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
                         text=df_metrics_plot[Variables_asset_values.portfolios],
                         hoverinfo='text+x+y'
                     ))
                     fig_2d.update_layout(
-                        title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility}',
-                        xaxis_title=Variables_asset_values.volatility,
-                        yaxis_title=Variables_asset_values.performance,
+                        title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
+                        xaxis_title=Variables_front.names_to_front[var_x_name],
+                        yaxis_title=Variables_front.names_to_front[var_y_name],
                         xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
                         yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
                         height=700
@@ -174,20 +199,20 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                     st.subheader(Variables_front.three_dimensions_graphics_title)
                     fig_3d = go.Figure()
                     fig_3d.add_trace(go.Scatter3d(
-                        x=df_metrics_plot[Variables_asset_values.volatility],
-                        y=df_metrics_plot[Variables_asset_values.downside_risk],
-                        z=df_metrics_plot[Variables_asset_values.performance],
+                        x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                        y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
+                        z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
                         mode='markers',
                         marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
                         text=df_metrics_plot[Variables_asset_values.portfolios],
                         hoverinfo='text+x+y+z'
                     ))
                     fig_3d.update_layout(
-                        title=f'{Variables_asset_values.performance} vs {Variables_asset_values.volatility} vs {Variables_asset_values.downside_risk}',
+                        title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
                         scene=dict(
-                            xaxis_title=Variables_asset_values.volatility,
-                            yaxis_title=Variables_asset_values.downside_risk,
-                            zaxis_title=Variables_asset_values.performance,
+                            xaxis_title=Variables_front.names_to_front[var_x_name],
+                            yaxis_title=Variables_front.names_to_front[var_y_name],
+                            zaxis_title=Variables_front.names_to_front[var_z_name],
                             xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
                             yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
                             zaxis_tickformat='.2%'   # Formatear eje Z como porcentaje

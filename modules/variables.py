@@ -21,6 +21,8 @@ class Variables_asset_values:
     downside_risk = 'Downside Risk'
     portfolios = 'portfolios'
     portfolio = 'portfolio'
+    duration = 'duration'
+    expected_return_forecast = 'expected_return_forecast'
 
 class Variables_user_management:
     authentication_status = 'authentication_status'
@@ -68,13 +70,13 @@ class Variables_front:
     metric_variable_z = 'Metric for Variable Z'
     select_metrics ='Select the metrics for each variable'
 
-
-    
     names_to_front = {
         "Expected Return": "Expected Return",
+        "Expected Return Forecast": "Expected Return Forecast",
         "Volatility": "Volatility",
         "Downside Risk": "Downside Risk",
-        "Maximum Drawdown": "Maximum Drawdown"
+        "Maximum Drawdown": "Maximum Drawdown",
+        "Duration": "Duration"
     }
 
 class Variables_data_up:
@@ -82,6 +84,7 @@ class Variables_data_up:
     singular_constrains_name_sheet = 'singular_constrains'
     grouped_constrains_name_sheet = 'grouped_constrains'
     values_constrains_name_sheet = 'values_constrains'
+    other_info_name_sheet = 'other_info'
 
 class Variables_mapping_optimization:
 
@@ -92,4 +95,13 @@ class Variables_mapping_optimization:
         "Maximum Drawdown": "MaxDrawdownFunction()"
     }
 
+
+class Variables_mapping_optimization_blacklitterman:
+
+    names_to_mapping = {
+        "Expected Return Forecast": "ExpectedReturnForecastFunction()",
+        "Volatility": "VolatilityFunction()",
+        "Downside Risk": "DownsideRiskFunction()",
+        "Maximum Drawdown": "MaxDrawdownFunction()"
+    }
 

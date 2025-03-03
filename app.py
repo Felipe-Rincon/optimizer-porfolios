@@ -95,141 +95,270 @@ if st.session_state[Variables_user_management.authentication_status] and not st.
             st.session_state[Variables_user_management.totp_verified] = False 
 
 # Formatear solo las columnas numéricas como porcentajes
-def format_percentage(df):
+def format_percentage(df, exclude_column=None):
+    # Selecciona solo las columnas numéricas
     numeric_columns = df.select_dtypes(include=[float, int]).columns
-    return df.style.format({col: "{:.2%}" for col in numeric_columns})
+    
+    # Crea un diccionario de formato excluyendo la columna especificada
+    format_dict = {col: "{:.2%}" for col in numeric_columns if col != exclude_column}
+    
+    # Aplica el formato
+    return df.style.format(format_dict)
 
 if st.session_state[Variables_user_management.authentication_status] and st.session_state[Variables_user_management.totp_verified]:
     st.title(Variables_front.name_app)
     st.write(f"{Variables_front.welcome_to}, {config[Variables_user.credentials][Variables_user.usernames][st.session_state[Variables_user_management.username]][Variables_user.name]}!")
-    
-    st.subheader(Variables_front.upload_data)
-    uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"])
 
-    if uploaded_file is not None:
-        try:
-            df_values = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_name_sheet) 
-            df_singular_contrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.singular_constrains_name_sheet)
-            df_grouped_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.grouped_constrains_name_sheet)
-            df_values_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_constrains_name_sheet)
+    # Crear pestañas para Markowitz y Black-Litterman
+    tab1, tab2 = st.tabs(["Markowitz", "Black-Litterman"])
 
-            st.subheader(Variables_front.values_title)
-            st.write(df_values)
+    with tab1:
+        st.subheader("Markowitz Optimization")
+        # Aquí va todo el código relacionado con Markowitz
+        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="markowitz_uploader")
 
-            # Crear tres columnas para las tablas
-            col1, col2, col3 = st.columns(3)
+        if uploaded_file is not None:
+            try:
+                df_values = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_name_sheet) 
+                df_singular_contrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.singular_constrains_name_sheet)
+                df_grouped_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.grouped_constrains_name_sheet)
+                df_values_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_constrains_name_sheet)
+                df_other_info = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.other_info_name_sheet)
 
-            with col1:
-                st.subheader(Variables_front.singular_constrains_title)
-                st.write(df_singular_contrains)
+                st.subheader(Variables_front.values_title)
+                st.write(df_values)
 
-            with col2:
-                st.subheader(Variables_front.grouped_constrains_title)
-                st.write(df_grouped_constrains)
+                col1, col2, col3 = st.columns(3)
 
-            with col3:
-                st.subheader(Variables_front.values_constrains_title)
-                st.write(format_percentage(df_values_constrains))
+                with col1:
+                    st.subheader(Variables_front.singular_constrains_title)
+                    st.write(df_singular_contrains)
 
-            # Selección de métricas para cada variable
-            st.subheader(Variables_front.select_metrics)
+                with col2:
+                    st.subheader(Variables_front.grouped_constrains_title)
+                    st.write(df_grouped_constrains)
 
-            # Variable 1
-            st.write(Variables_front.variable_x)
-            var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+                with col3:
+                    st.subheader(Variables_front.values_constrains_title)
+                    st.write(format_percentage(df_values_constrains))
 
-            # Variable 2
-            st.write(Variables_front.variable_y)
-            var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+                st.subheader(Variables_front.select_metrics)
 
-            # Variable 3
-            st.write(Variables_front.variable_z)
-            var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization.names_to_mapping.keys()))
+                st.write(Variables_front.variable_x)
+                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_x")
 
-            # Crear la variable functions basada en las selecciones
-            functions_entry = [
-                Variables_mapping_optimization.names_to_mapping[var_x_name],
-                Variables_mapping_optimization.names_to_mapping[var_y_name],
-                Variables_mapping_optimization.names_to_mapping[var_z_name]
-            ]
+                st.write(Variables_front.variable_y)
+                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_y")
 
-            if st.button(Variables_front.optimize):
-                with st.spinner(Variables_front.optimizing):  
-                    print(functions_entry)
-                    asset_values = asset_values_generator(df_values)
-                    portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
-                    optimum = nsga_3.main(asset_values, portfolio_constraints, 1000, 1 , functions_entry)
+                st.write(Variables_front.variable_z)
+                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_z")
 
-                    column_names = df_values.columns.tolist()  
-                    df_pesos = pd.DataFrame(optimum, columns=column_names)
-                    df_pesos.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_pesos))])
-                    
-                    frontier = nsga_3.evaluate_portfolios(asset_values, optimum,functions_entry)
-                    column_names_metrics = [Variables_front.names_to_front[var_x_name], Variables_front.names_to_front[var_y_name],Variables_front.names_to_front[var_z_name]]
-                    df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
-                    df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
+                functions_entry = [
+                    Variables_mapping_optimization.names_to_mapping[var_x_name],
+                    Variables_mapping_optimization.names_to_mapping[var_y_name],
+                    Variables_mapping_optimization.names_to_mapping[var_z_name]
+                ]
 
-                    st.subheader(Variables_front.optimization_results_title)
-                    
-                    # Gráficas optimizadas con go.Scatter y go.Scatter3d
-                    df_metrics_plot = df_metrics.copy()
+                if st.button(Variables_front.optimize, key="markowitz_optimize"):
+                    with st.spinner(Variables_front.optimizing):  
+                        asset_values = asset_values_generator(df_values, df_other_info)
+                        portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
+                        optimum = nsga_3.main(asset_values, portfolio_constraints, 1000, 1 , functions_entry)
 
-                    # Gráfica 2D optimizada
-                    st.subheader(Variables_front.two_dimensions_graphics_title)
-                    fig_2d = go.Figure()
-                    fig_2d.add_trace(go.Scatter(
-                        x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
-                        y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
-                        mode='markers',
-                        marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                        text=df_metrics_plot[Variables_asset_values.portfolios],
-                        hoverinfo='text+x+y'
-                    ))
-                    fig_2d.update_layout(
-                        title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
-                        xaxis_title=Variables_front.names_to_front[var_x_name],
-                        yaxis_title=Variables_front.names_to_front[var_y_name],
-                        xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
-                        yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
-                        height=700
-                    )
-                    st.plotly_chart(fig_2d, use_container_width=True)
+                        column_names = df_values.columns.tolist()  
+                        df_pesos = pd.DataFrame(optimum, columns=column_names)
+                        df_pesos.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_pesos))])
+                        
+                        frontier = nsga_3.evaluate_portfolios(asset_values, optimum, functions_entry)
+                        column_names_metrics = [Variables_front.names_to_front[var_x_name], Variables_front.names_to_front[var_y_name], Variables_front.names_to_front[var_z_name], Variables_front.names_to_front['Duration']]
+                        df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
+                        df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
 
-                    # Gráfica 3D optimizada
-                    st.subheader(Variables_front.three_dimensions_graphics_title)
-                    fig_3d = go.Figure()
-                    fig_3d.add_trace(go.Scatter3d(
-                        x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
-                        y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
-                        z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
-                        mode='markers',
-                        marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                        text=df_metrics_plot[Variables_asset_values.portfolios],
-                        hoverinfo='text+x+y+z'
-                    ))
-                    fig_3d.update_layout(
-                        title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
-                        scene=dict(
+                        st.subheader(Variables_front.optimization_results_title)
+                        
+                        # Gráficas optimizadas
+                        df_metrics_plot = df_metrics.copy()
+
+                        # Gráfica 2D optimizada
+                        st.subheader(Variables_front.two_dimensions_graphics_title)
+                        fig_2d = go.Figure()
+                        fig_2d.add_trace(go.Scatter(
+                            x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                            y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
+                            mode='markers',
+                            marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                            text=df_metrics_plot[Variables_asset_values.portfolios],
+                            hoverinfo='text+x+y'
+                        ))
+                        fig_2d.update_layout(
+                            title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
                             xaxis_title=Variables_front.names_to_front[var_x_name],
                             yaxis_title=Variables_front.names_to_front[var_y_name],
-                            zaxis_title=Variables_front.names_to_front[var_z_name],
-                            xaxis_tickformat='.2%',  # Formatear eje X como porcentaje
-                            yaxis_tickformat='.2%',  # Formatear eje Y como porcentaje
-                            zaxis_tickformat='.2%'   # Formatear eje Z como porcentaje
-                        ),
-                        height=700
-                    )
-                    st.plotly_chart(fig_3d, use_container_width=True)
+                            xaxis_tickformat='.2%',
+                            yaxis_tickformat='.2%',
+                            height=700
+                        )
+                        st.plotly_chart(fig_2d, use_container_width=True)
 
-                    # Mostrar df_pesos y df_metrics con columnas numéricas formateadas como porcentajes
-                    st.write(Variables_front.portfolio_weights_title)
-                    st.write(format_percentage(df_pesos))  # Formatear solo columnas numéricas
+                        # Gráfica 3D optimizada
+                        st.subheader(Variables_front.three_dimensions_graphics_title)
+                        fig_3d = go.Figure()
+                        fig_3d.add_trace(go.Scatter3d(
+                            x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                            y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
+                            z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
+                            mode='markers',
+                            marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                            text=df_metrics_plot[Variables_asset_values.portfolios],
+                            hoverinfo='text+x+y+z'
+                        ))
+                        fig_3d.update_layout(
+                            title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
+                            scene=dict(
+                                xaxis_title=Variables_front.names_to_front[var_x_name],
+                                yaxis_title=Variables_front.names_to_front[var_y_name],
+                                zaxis_title=Variables_front.names_to_front[var_z_name],
+                                xaxis_tickformat='.2%',
+                                yaxis_tickformat='.2%',
+                                zaxis_tickformat='.2%'
+                            ),
+                            height=700
+                        )
+                        st.plotly_chart(fig_3d, use_container_width=True)
 
-                    st.write(Variables_front.portfolio_metrics_title)
-                    st.write(format_percentage(df_metrics))  # Formatear solo columnas numéricas
+                        # Mostrar df_pesos y df_metrics
+                        st.write(Variables_front.portfolio_weights_title)
+                        st.write(format_percentage(df_pesos))
 
-        except Exception as e:
-            st.error(f"Error al leer el archivo Excel: {e}")
+                        st.write(Variables_front.portfolio_metrics_title)
+                        st.write(format_percentage(df_metrics, exclude_column='Duration'))
+
+            except Exception as e:
+                st.error(f"Error al leer el archivo Excel: {e}")
+
+    with tab2:
+        st.subheader("Black-Litterman Optimization")
+        # Aquí va todo el código relacionado con Black-Litterman
+        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="black_litterman_uploader")
+
+        if uploaded_file is not None:
+            try:
+                df_values = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_name_sheet) 
+                df_singular_contrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.singular_constrains_name_sheet)
+                df_grouped_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.grouped_constrains_name_sheet)
+                df_values_constrains = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.values_constrains_name_sheet)
+                df_other_info = pd.read_excel(uploaded_file, sheet_name=Variables_data_up.other_info_name_sheet)
+
+                st.subheader(Variables_front.values_title)
+                st.write(df_values)
+
+                col1, col2, col3 = st.columns(3)
+
+                with col1:
+                    st.subheader(Variables_front.singular_constrains_title)
+                    st.write(df_singular_contrains)
+
+                with col2:
+                    st.subheader(Variables_front.grouped_constrains_title)
+                    st.write(df_grouped_constrains)
+
+                with col3:
+                    st.subheader(Variables_front.values_constrains_title)
+                    st.write(format_percentage(df_values_constrains))
+
+                st.subheader(Variables_front.select_metrics)
+
+                st.write(Variables_front.variable_x)
+                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_x")
+
+                st.write(Variables_front.variable_y)
+                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_y")
+
+                st.write(Variables_front.variable_z)
+                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_z")
+
+                functions_entry = [
+                    Variables_mapping_optimization_blacklitterman.names_to_mapping[var_x_name],
+                    Variables_mapping_optimization_blacklitterman.names_to_mapping[var_y_name],
+                    Variables_mapping_optimization_blacklitterman.names_to_mapping[var_z_name]
+                ]
+
+                if st.button(Variables_front.optimize, key="black_litterman_optimize"):
+                    with st.spinner(Variables_front.optimizing):  
+                        asset_values = asset_values_generator(df_values, df_other_info)
+                        portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
+                        optimum = nsga_3.main(asset_values, portfolio_constraints, 1000, 1 , functions_entry)
+
+                        column_names = df_values.columns.tolist()  
+                        df_pesos = pd.DataFrame(optimum, columns=column_names)
+                        df_pesos.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_pesos))])
+                        
+                        frontier = nsga_3.evaluate_portfolios(asset_values, optimum, functions_entry)
+                        column_names_metrics = [Variables_front.names_to_front[var_x_name], Variables_front.names_to_front[var_y_name], Variables_front.names_to_front[var_z_name], Variables_front.names_to_front['Duration']]
+                        df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
+                        df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
+
+                        st.subheader(Variables_front.optimization_results_title)
+                        
+                        # Gráficas optimizadas
+                        df_metrics_plot = df_metrics.copy()
+
+                        # Gráfica 2D optimizada
+                        st.subheader(Variables_front.two_dimensions_graphics_title)
+                        fig_2d = go.Figure()
+                        fig_2d.add_trace(go.Scatter(
+                            x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                            y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
+                            mode='markers',
+                            marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                            text=df_metrics_plot[Variables_asset_values.portfolios],
+                            hoverinfo='text+x+y'
+                        ))
+                        fig_2d.update_layout(
+                            title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
+                            xaxis_title=Variables_front.names_to_front[var_x_name],
+                            yaxis_title=Variables_front.names_to_front[var_y_name],
+                            xaxis_tickformat='.2%',
+                            yaxis_tickformat='.2%',
+                            height=700
+                        )
+                        st.plotly_chart(fig_2d, use_container_width=True)
+
+                        # Gráfica 3D optimizada
+                        st.subheader(Variables_front.three_dimensions_graphics_title)
+                        fig_3d = go.Figure()
+                        fig_3d.add_trace(go.Scatter3d(
+                            x=df_metrics_plot[Variables_front.names_to_front[var_x_name]],
+                            y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
+                            z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
+                            mode='markers',
+                            marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
+                            text=df_metrics_plot[Variables_asset_values.portfolios],
+                            hoverinfo='text+x+y+z'
+                        ))
+                        fig_3d.update_layout(
+                            title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
+                            scene=dict(
+                                xaxis_title=Variables_front.names_to_front[var_x_name],
+                                yaxis_title=Variables_front.names_to_front[var_y_name],
+                                zaxis_title=Variables_front.names_to_front[var_z_name],
+                                xaxis_tickformat='.2%',
+                                yaxis_tickformat='.2%',
+                                zaxis_tickformat='.2%'
+                            ),
+                            height=700
+                        )
+                        st.plotly_chart(fig_3d, use_container_width=True)
+
+                        # Mostrar df_pesos y df_metrics
+                        st.write(Variables_front.portfolio_weights_title)
+                        st.write(format_percentage(df_pesos))
+
+                        st.write(Variables_front.portfolio_metrics_title)
+                        st.write(format_percentage(df_metrics, exclude_column= 'Duration'))
+
+            except Exception as e:
+                st.error(f"Error al leer el archivo Excel: {e}")
 
     if st.button(Variables_front.logout):
         logout()
