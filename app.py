@@ -110,12 +110,12 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
     st.write(f"{Variables_front.welcome_to}, {config[Variables_user.credentials][Variables_user.usernames][st.session_state[Variables_user_management.username]][Variables_user.name]}!")
 
     # Crear pestañas para Markowitz y Black-Litterman
-    tab1, tab2 = st.tabs(["Markowitz", "Black-Litterman"])
+    tab1, tab2 = st.tabs(["Strategy Allocation", "Tactical Allocation"])
 
     with tab1:
-        st.subheader("Markowitz Optimization")
+        st.subheader("Strategy Allocation Optimization")
         # Aquí va todo el código relacionado con Markowitz
-        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="markowitz_uploader")
+        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="strategy_uploader")
 
         if uploaded_file is not None:
             try:
@@ -145,13 +145,13 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                 st.subheader(Variables_front.select_metrics)
 
                 st.write(Variables_front.variable_x)
-                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_x")
+                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="strategy_var_x")
 
                 st.write(Variables_front.variable_y)
-                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_y")
+                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="strategy_var_y")
 
                 st.write(Variables_front.variable_z)
-                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="markowitz_var_z")
+                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization.names_to_mapping.keys()), key="strategy_var_z")
 
                 functions_entry = [
                     Variables_mapping_optimization.names_to_mapping[var_x_name],
@@ -159,7 +159,7 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                     Variables_mapping_optimization.names_to_mapping[var_z_name]
                 ]
 
-                if st.button(Variables_front.optimize, key="markowitz_optimize"):
+                if st.button(Variables_front.optimize, key="strategy_optimize"):
                     with st.spinner(Variables_front.optimizing):  
                         asset_values = asset_values_generator(df_values, df_other_info)
                         portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
@@ -187,8 +187,7 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                             y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
                             mode='markers',
                             marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                            text=df_metrics_plot[Variables_asset_values.portfolios],
-                            hoverinfo='text+x+y'
+                            text=df_metrics_plot.apply(lambda row: f"Portafolio: {row[Variables_asset_values.portfolios]}<br>{var_x_name}: {row[Variables_front.names_to_front[var_x_name]]:.2%}<br>{var_y_name}: {row[Variables_front.names_to_front[var_y_name]]:.2%}", axis=1), hoverinfo='text'
                         ))
                         fig_2d.update_layout(
                             title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
@@ -209,8 +208,7 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                             z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
                             mode='markers',
                             marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                            text=df_metrics_plot[Variables_asset_values.portfolios],
-                            hoverinfo='text+x+y+z'
+                            text=df_metrics_plot.apply(lambda row: f"Portafolio: {row[Variables_asset_values.portfolios]}<br>{var_x_name}: {row[Variables_front.names_to_front[var_x_name]]:.2%}<br>{var_y_name}: {row[Variables_front.names_to_front[var_y_name]]:.2%}<br>{var_z_name}: {row[Variables_front.names_to_front[var_z_name]]:.2%}", axis=1), hoverinfo='text'
                         ))
                         fig_3d.update_layout(
                             title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
@@ -237,9 +235,9 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                 st.error(f"Error al leer el archivo Excel: {e}")
 
     with tab2:
-        st.subheader("Black-Litterman Optimization")
+        st.subheader("Tactical Allocation Optimization")
         # Aquí va todo el código relacionado con Black-Litterman
-        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="black_litterman_uploader")
+        uploaded_file = st.file_uploader(Variables_front.upload_excel_file, type=["xlsx"], key="tactical_uploader")
 
         if uploaded_file is not None:
             try:
@@ -269,13 +267,13 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                 st.subheader(Variables_front.select_metrics)
 
                 st.write(Variables_front.variable_x)
-                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_x")
+                var_x_name = st.selectbox(Variables_front.metric_variable_x, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="tactical_var_x")
 
                 st.write(Variables_front.variable_y)
-                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_y")
+                var_y_name = st.selectbox(Variables_front.metric_variable_y, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="tactical_var_y")
 
                 st.write(Variables_front.variable_z)
-                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="black_litterman_var_z")
+                var_z_name = st.selectbox(Variables_front.metric_variable_z, options=list(Variables_mapping_optimization_blacklitterman.names_to_mapping.keys()), key="tactical_var_z")
 
                 functions_entry = [
                     Variables_mapping_optimization_blacklitterman.names_to_mapping[var_x_name],
@@ -283,7 +281,7 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                     Variables_mapping_optimization_blacklitterman.names_to_mapping[var_z_name]
                 ]
 
-                if st.button(Variables_front.optimize, key="black_litterman_optimize"):
+                if st.button(Variables_front.optimize, key="tactical_optimize"):
                     with st.spinner(Variables_front.optimizing):  
                         asset_values = asset_values_generator(df_values, df_other_info)
                         portfolio_constraints = constrains_generator(df_singular_contrains, df_grouped_constrains, df_values_constrains)
@@ -311,9 +309,9 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                             y=df_metrics_plot[Variables_front.names_to_front[var_y_name]],
                             mode='markers',
                             marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                            text=df_metrics_plot[Variables_asset_values.portfolios],
-                            hoverinfo='text+x+y'
+                            text=df_metrics_plot.apply(lambda row: f"Portafolio: {row[Variables_asset_values.portfolios]}<br>{var_x_name}: {row[Variables_front.names_to_front[var_x_name]]:.2%}<br>{var_y_name}: {row[Variables_front.names_to_front[var_y_name]]:.2%}", axis=1), hoverinfo='text'
                         ))
+                        
                         fig_2d.update_layout(
                             title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]}',
                             xaxis_title=Variables_front.names_to_front[var_x_name],
@@ -333,8 +331,7 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                             z=df_metrics_plot[Variables_front.names_to_front[var_z_name]],
                             mode='markers',
                             marker=dict(size=3, color=df_metrics_plot.index, colorscale='Viridis'),
-                            text=df_metrics_plot[Variables_asset_values.portfolios],
-                            hoverinfo='text+x+y+z'
+                            text=df_metrics_plot.apply(lambda row: f"Portafolio: {row[Variables_asset_values.portfolios]}<br>{var_x_name}: {row[Variables_front.names_to_front[var_x_name]]:.2%}<br>{var_y_name}: {row[Variables_front.names_to_front[var_y_name]]:.2%}<br>{var_z_name}: {row[Variables_front.names_to_front[var_z_name]]:.2%}", axis=1), hoverinfo='text'
                         ))
                         fig_3d.update_layout(
                             title=f'{Variables_front.names_to_front[var_x_name]} vs {Variables_front.names_to_front[var_y_name]} vs {Variables_front.names_to_front[var_z_name]}',
