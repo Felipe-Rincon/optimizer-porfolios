@@ -15,9 +15,9 @@ from modules import nsga_3
 
 st.set_page_config(layout="wide")
 
-logo_path = 'Data/logos/logo.jpg'
+#logo_path = 'Data/logos/logo.jpg'
 
-st.image(logo_path, width=150)
+#st.image(logo_path, width=150)
 
 with open(Variables_user.route_yaml) as file:
     config = yaml.load(file, Loader=SafeLoader)

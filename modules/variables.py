@@ -76,7 +76,9 @@ class Variables_front:
         "Volatility": "Volatility",
         "Downside Risk": "Downside Risk",
         "Maximum Drawdown": "Maximum Drawdown",
-        "Duration": "Duration"
+        "Duration": "Duration",
+        "Sharpe Ratio" : "Sharpe Ratio",
+        "Sortino Ratio": "Sortino Ratio"
     }
 
 class Variables_data_up:
@@ -92,7 +94,9 @@ class Variables_mapping_optimization:
         "Expected Return": "ExpectedReturnFunction()",
         "Volatility": "VolatilityFunction()",
         "Downside Risk": "DownsideRiskFunction()",
-        "Maximum Drawdown": "MaxDrawdownFunction()"
+        "Maximum Drawdown": "MaxDrawdownFunction()",
+        "Sortino Ratio": "SortinoRatioFunction()",
+        "Sharpe Ratio": "SharpeRatioFunction()"
     }
 
 
@@ -102,6 +106,8 @@ class Variables_mapping_optimization_blacklitterman:
         "Expected Return Forecast": "ExpectedReturnForecastFunction()",
         "Volatility": "VolatilityFunction()",
         "Downside Risk": "DownsideRiskFunction()",
-        "Maximum Drawdown": "MaxDrawdownFunction()"
+        "Maximum Drawdown": "MaxDrawdownFunction()",
+        "Sortino Ratio": "SortinoRatioFunction()",
+        "Sharpe Ratio": "SharpeRatioFunction()"
     }
 
