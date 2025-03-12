@@ -174,6 +174,11 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                         df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
                         df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
 
+                        all_metrics = nsga_3.evaluate_all_metrics_strategy(asset_values, optimum)
+                        column_names_all_metrics = [Variables_front.names_to_front['Volatility'], Variables_front.names_to_front['Expected Return'], Variables_front.names_to_front['Maximum Drawdown'], Variables_front.names_to_front['Downside Risk'], Variables_front.names_to_front['Sortino Ratio'],Variables_front.names_to_front['Sharpe Ratio'], Variables_front.names_to_front['Duration']]
+                        df_all_metrics = pd.DataFrame(all_metrics, columns=column_names_all_metrics)
+                        df_all_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_all_metrics))])
+
                         st.subheader(Variables_front.optimization_results_title)
                         
                         # Gráficas optimizadas
@@ -230,6 +235,9 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
 
                         st.write(Variables_front.portfolio_metrics_title)
                         st.write(format_percentage(df_metrics, exclude_column='Duration'))
+
+                        st.write(Variables_front.portfolio_all_metrics_title)
+                        st.write(format_percentage(df_all_metrics, exclude_column='Duration'))
 
             except Exception as e:
                 st.error(f"Error al leer el archivo Excel: {e}")
@@ -296,12 +304,15 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                         df_metrics = pd.DataFrame(frontier, columns=column_names_metrics)
                         df_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_metrics))])
 
+                        all_metrics = nsga_3.evaluate_all_metrics_tactical(asset_values, optimum)
+                        column_names_all_metrics = [Variables_front.names_to_front['Volatility'], Variables_front.names_to_front['Expected Return Forecast'], Variables_front.names_to_front['Maximum Drawdown'], Variables_front.names_to_front['Downside Risk'], Variables_front.names_to_front['Sortino Ratio'],Variables_front.names_to_front['Sharpe Ratio'], Variables_front.names_to_front['Duration']]
+                        df_all_metrics = pd.DataFrame(all_metrics, columns=column_names_all_metrics)
+                        df_all_metrics.insert(0, Variables_asset_values.portfolios, [f'{Variables_asset_values.portfolio} {i+1}' for i in range(len(df_all_metrics))])
+
                         st.subheader(Variables_front.optimization_results_title)
-                        
-                        # Gráficas optimizadas
+    
                         df_metrics_plot = df_metrics.copy()
 
-                        # Gráfica 2D optimizada
                         st.subheader(Variables_front.two_dimensions_graphics_title)
                         fig_2d = go.Figure()
                         fig_2d.add_trace(go.Scatter(
@@ -322,7 +333,6 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                         )
                         st.plotly_chart(fig_2d, use_container_width=True)
 
-                        # Gráfica 3D optimizada
                         st.subheader(Variables_front.three_dimensions_graphics_title)
                         fig_3d = go.Figure()
                         fig_3d.add_trace(go.Scatter3d(
@@ -347,12 +357,14 @@ if st.session_state[Variables_user_management.authentication_status] and st.sess
                         )
                         st.plotly_chart(fig_3d, use_container_width=True)
 
-                        # Mostrar df_pesos y df_metrics
                         st.write(Variables_front.portfolio_weights_title)
                         st.write(format_percentage(df_pesos))
 
                         st.write(Variables_front.portfolio_metrics_title)
                         st.write(format_percentage(df_metrics, exclude_column= 'Duration'))
+                        
+                        st.write(Variables_front.portfolio_all_metrics_title)
+                        st.write(format_percentage(df_all_metrics, exclude_column='Duration'))
 
             except Exception as e:
                 st.error(f"Error al leer el archivo Excel: {e}")

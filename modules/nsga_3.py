@@ -224,9 +224,8 @@ class SharpeRatioFunction:
         self.risk_free_rate = risk_free_rate
     
     def generateUnitValues(self, solution, values):
-        units = [100]  # Valor inicial del portafolio
+        units = [100]
         for i in range(len(values[0]['historical_returns'])):
-            # Calcula el retorno del portafolio en el período i
             sum_val = sum(values[j]['historical_returns'][i] * solution[j] for j in range(len(solution)))
             units.append(units[i] * (1 + sum_val))
         return units
@@ -252,23 +251,15 @@ class SharpeRatioFunction:
         return (avg_return - self.risk_free_rate) / volatility
     
     def apply(self, solution, values):
-        """
-        Aplica la función para calcular el Ratio de Sharpe.
-        """
-        # Genera los valores unitarios del portafolio
         prices = self.generateUnitValues(solution, values)
-        # Calcula los retornos históricos
         returns = self.calculateReturns(prices)
-        # Calcula el Ratio de Sharpe
         return self.calculateSharpeRatio(returns)
     
     def compare(self, value1, value2):
-        """
-        Compara dos valores del Ratio de Sharpe.
-        """
+
         if abs(value1 - value2) < 1e-9:
-            return 0  # Son iguales
-        return 1 if value1 < value2 else -1  # 1 si value1 es menor, -1 si es mayor
+            return 0 
+        return 1 if value1 < value2 else -1
 
 class DurationFunction:
     def __init__(self):
@@ -300,6 +291,14 @@ def evaluate(assetValues, population, functions):
 
 def evaluate_portfolios(assetValues, population, functions_entry):
     functions = functions_generator(functions_entry) + [DurationFunction()]
+    return [[func.apply(individual, assetValues) for func in functions] for individual in population]
+
+def evaluate_all_metrics_strategy(assetValues, population):
+    functions = [VolatilityFunction(), ExpectedReturnFunction(), MaxDrawdownFunction(), DownsideRiskFunction(), SortinoRatioFunction(), SharpeRatioFunction(), DurationFunction()]
+    return [[func.apply(individual, assetValues) for func in functions] for individual in population]
+
+def evaluate_all_metrics_tactical(assetValues, population):
+    functions = [VolatilityFunction(), ExpectedReturnForecastFunction(), MaxDrawdownFunction(), DownsideRiskFunction(), SortinoRatioFunction(), SharpeRatioFunction(), DurationFunction()]
     return [[func.apply(individual, assetValues) for func in functions] for individual in population]
 
 def nonDominatedSort(population, performances, functions):

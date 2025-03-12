@@ -59,6 +59,7 @@ class Variables_front:
     three_dimensions_graphics_title = '3D Graphics'
     portfolio_weights_title = 'Portfolio Weights:'
     portfolio_metrics_title = 'Portfolio Metrics:'
+    portfolio_all_metrics_title = 'Portfolio All Metrics:'
     incorrect_credentials = 'Incorrect username or password'
     try_again = 'Try again.' 
     welcome_to = 'Welcome to'
