@@ -1,5 +1,5 @@
 cookie:
-  expiry_days: 30
+  expiry_days: 365
   key: clave_secreta_cookie
   name: nombre_cookie
 credentials:
@@ -8,7 +8,7 @@ credentials:
       email: usuario1@example.com
       name: Felipe Rincon
       password: $2b$12$E5.g1jFAAjr99aY/ru3x7uIFYt0Y4Z.To/4PCmtP.V6uhvzFNfhuS
-      totp_secret: null
+      totp_secret: 46YG4THC25ONI3AOJ3XVQZHEV57E47FV
     guillermoo:
       email: usuario2@example.com
       name: Guillermo Otero
