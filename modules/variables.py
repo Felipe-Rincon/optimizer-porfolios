@@ -70,6 +70,25 @@ class Variables_front:
     metric_variable_y = 'Metric for Variable Y'
     metric_variable_z = 'Metric for Variable Z'
     select_metrics ='Select the metrics for each variable'
+    portofolio_yield_base_100 = 'Portfolio Yield (NAV base 100)'
+    upload_weights_porfolios= 'Upload weights of portfolios'
+    upload_asset_prices = 'Upload asset prices'
+    backtesting_title = "Backtesting"
+    select_portfolio = 'Select a portfolio'
+    start_backtesting = 'Start Backtesting'
+    date = 'Date'
+    frequency = 'Frequency'
+    yield_histograms_title = 'Yield Histograms'
+    portfolio_drawdown_title = 'Portfolio Drawdown'
+    daily_histogram_title = '**Daily Histogram**'
+    distribution_daily_yields = 'Distribution of Daily Yields (%)'
+    yield_label = 'Yield (%)'
+    monthly_histogram_title= '**Monthly Histogram**'
+    distribution_monthly_yields = 'Distribution of Monthly Yields (%)'
+    quarterly_histogram_title = '**Quarterly Histogram**'
+    distribution_quarterly_yields = 'Quarterly Yield Distribution (%)'
+    annual_histogram_title = '**Annual Histogram**'
+    distribution_annual_yields = 'Distribution of Annual Returns (%)'
 
     names_to_front = {
         "Expected Return": "Expected Return",
